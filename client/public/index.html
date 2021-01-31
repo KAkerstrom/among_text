@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html class="w-100 h-100">
+  <head>
+    <meta charset="utf-8" />
+    <title>Among</title>
+    <link rel="stylesheet" href="./styles.css" />
+
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+      integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+      integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+      crossorigin="anonymous"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+      integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+      crossorigin="anonymous"
+    ></script>
+
+    <script src="./node_modules/socket.io-client/dist/socket.io.js"></script>
+    <script defer src="./scripts.js"></script>
+  </head>
+  <body
+    class="bg-dark w-100 h-100 d-flex align-items-center justify-items-center"
+  >
+    <div class="contentDiv container rounded shadow bg-secondary w-50 h-75">
+      <div id="game" class="w-100 h-100" style="display: none">
+        <div class="gameDiv w-100 h-100">
+          <div id="messageDiv" class="messageDiv m-2 d-flex flex-column"></div>
+          <div class="commandDiv d-flex flex-row align-items-center mb-2">
+            <input
+              id="commandTxt"
+              class="w-100"
+              type="text"
+              value=""
+              autofocus
+            />
+            <button id="sendBtn" type="button" class="btn btn-info m-1 ml-3">
+              <b>></b>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="init" class="w-100 h-100">
+        <div
+          class="initDiv w-100 h-100 d-flex align-items-center justify-content-center"
+        >
+          <div class="w-50 h-50">
+            <h5 class="text-light">Username</h5>
+            <input id="usernameTxt" class="w-100 mb-2" type="text" value="" />
+            <h5 class="text-light">Room Code</h5>
+            <input id="roomCodeTxt" class="w-100 mb-2" type="text" value="" />
+            <button id="joinBtn" type="button" class="btn btn-info w-100">
+              Join Room
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,20 @@
+.gameDiv {
+  display: grid;
+  grid-template-areas:
+    'message'
+    'commandInput';
+  grid-template-rows: auto max-content;
+}
+
+.messageDiv {
+  grid-area: 'message';
+  overflow-y: auto;
+}
+
+.commandDiv {
+  grid-area: 'commandInput';
+}
+
+input {
+  max-height: 2rem;
+}
