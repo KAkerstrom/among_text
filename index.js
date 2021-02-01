@@ -3,15 +3,8 @@ const http = require('http');
 const express = require('express');
 const socketio = require('socket.io');
 const cors = require('cors');
-const game = require('./game');
-const {
-  newUser,
-  getUser,
-  joinRoom,
-  leaveRoom,
-  getRoom,
-  setUsername,
-} = require('./users');
+const { newUser, removeUser, getUser, setUsername } = require('./users');
+const { joinGame, leaveGame, getGame, parse } = require('./game');
 
 const app = express();
 const server = http.createServer(app);
@@ -31,71 +24,54 @@ app.use(
 );
 
 io.on('connect', (socket) => {
-  const user = newUser(socket.id);
+  const user = newUser(socket);
 
   socket.on('init', ({ username, roomCode }) => {
-    const errors = [];
-    if (username) {
-      result = setUsername(socket.id, username);
-      if (result.error) errors.push(result);
-    } else errors.push({ error: true, message: 'Username is required.' });
-    if (roomCode) {
-      result = joinRoom(socket.id, roomCode);
-      if (result.error) errors.push(result);
-    } else errors.push({ error: true, message: 'Room Code is required.' });
-
-    if (errors.length > 0) socket.emit('init_fail', errors);
-    else {
-      getUser(socket.id).state = 'lobby';
-      socket.join(roomCode);
-      socket.emit('init_success', [{ message: 'Welcome, ' + username }]);
-      socket
-        .to(roomCode)
-        .emit('msg', [{ message: `${username} has joined the room!` }]);
+    let result = setUsername(socket.id, username);
+    if (result.error) {
+      socket.emit('init_fail', [result]);
+      return;
     }
+    if (roomCode) {
+      result = joinGame(socket.id, roomCode);
+      if (result.error) {
+        socket.emit('init_fail', [result]);
+        return;
+      }
+    }
+
+    const user = getUser(socket.id);
+    user.state = 'lobby';
+    socket.join(roomCode);
+    socket.emit('init_success', [result]);
+    socket
+      .to(roomCode)
+      .emit('msg', [
+        { message: `${username} has joined the room as ${user.color}` },
+      ]);
   });
 
   socket.on('disconnect', () => {
     let user = getUser(socket.id);
     if (!user) return;
-    let room = getRoom(user.room);
+    let room = getGame(user.room);
     if (!room) return;
 
-    socket.leave(socket.room);
-    leaveRoom(socket.id);
-    io.to(room.id).emit('msg', [
+    io.to(room.code).emit('msg', [
       { message: `${user.username} has disconnected.` },
     ]);
+    leaveGame(socket.id);
+    removeUser(socket.id);
   });
 
   socket.on('command', (data) => {
-    let result;
-    switch (user.state) {
-      case 'await_init':
-        socket.emit('msg', [
-          {
-            error: true,
-            message: 'An error has occurred. Try refreshing and trying again.',
-          },
-        ]);
-        break;
+    const user = getUser(socket.id);
+    if (!user) return [error('No user found. Try reconnecting.')];
+    if (!user.room) return [error('User not in a game. Try reconnecting.')];
+    const game = getGame(user.room);
+    if (!game) return [error('User is not in a game. Try reconnecting.')];
 
-      case 'lobby':
-        if (data.message.startsWith('/'))
-          socket.emit('msg', [{ message: 'okay' }]);
-        else
-          io.in(user.room).emit('msg', [
-            {
-              speaker: user.username,
-              message: `${user.username} says: ${data.message}`,
-            },
-          ]);
-        break;
-
-      default:
-        socket.emit('msg', [{ message: '[unknown state]' }]);
-        break;
-    }
+    parse(io, socket, data.message);
   });
 });
 
