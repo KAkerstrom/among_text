@@ -33,7 +33,7 @@ io.on('connect', (socket) => {
       return;
     }
     if (roomCode) {
-      result = joinGame(socket.id, roomCode);
+      result = joinGame(socket, roomCode);
       if (result.error) {
         socket.emit('init_fail', [result]);
         return;

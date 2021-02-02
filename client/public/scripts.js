@@ -7,6 +7,10 @@ const roomCodeTxt = document.getElementById('roomCodeTxt');
 // FUNCTIONS
 
 const displayMessages = (msgList) => {
+  if (!Array.isArray(msgList)) {
+    console.error('Warning: Forgot to send msg as list.\n' + msgList.message);
+    msgList = [msgList];
+  }
   msgList.forEach((msg) => {
     if (msg.cls) clearScreen();
     if (msg.message) {
