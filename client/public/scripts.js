@@ -3,30 +3,20 @@ const commandTxt = document.getElementById('commandTxt');
 const messageDiv = document.getElementById('messageDiv');
 const usernameTxt = document.getElementById('usernameTxt');
 const roomCodeTxt = document.getElementById('roomCodeTxt');
+const joinBtn = document.getElementById('joinBtn');
 
 // FUNCTIONS
-
 const displayMessages = (msgList) => {
+  console.log(msgList);
   if (!Array.isArray(msgList)) {
     console.error('Warning: Forgot to send msg as list.\n' + msgList.message);
     msgList = [msgList];
   }
   msgList.forEach((msg) => {
     if (msg.cls) clearScreen();
-    if (msg.message) {
-      const div = document.createElement('div');
-      div.className = 'mb-2';
-      div.style.backgroundColor = msg.bgColor || 'darkslategrey';
-      div.style.color = msg.textColor || 'white';
-
-      const message = document.createElement('p');
-      message.className = 'm-2';
-      message.innerText = msg.message;
-
-      div.appendChild(message);
-      messageDiv.appendChild(div);
-    }
+    if (msg.message) messageDiv.appendChild(chatDiv(msg));
   });
+
   messageDiv.scrollTop = messageDiv.scrollHeight;
 };
 
@@ -72,8 +62,11 @@ roomCodeTxt.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') joinRoom();
 });
 
-document.getElementById('joinBtn').addEventListener('click', joinRoom);
 document.getElementById('sendBtn').addEventListener('click', sendCommand);
+joinBtn.addEventListener('click', () => {
+  joinBtn.disabled = true;
+  joinRoom();
+});
 
 // SOCKET EVENTS
 
@@ -81,6 +74,7 @@ socket.on('init_fail', (data) => {
   alert(
     '(Proper error alerts to come)\nThere was an error joining the room. View console for details.'
   );
+  joinBtn.disabled = false;
   console.log(data);
 });
 
@@ -100,6 +94,8 @@ socket.on('disconnect', (data) => {
   alert('Server disconnect...');
   document.getElementById('init').style.display = 'block';
   document.getElementById('game').style.display = 'none';
+  usernameTxt.focus();
+  joinBtn.disabled = false;
 });
 
 // SETUP CODE

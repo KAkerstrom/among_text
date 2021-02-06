@@ -1,0 +1,10 @@
+Todo:
+ - Change to use classes for users and games
+ - use a client-stored uuid to ensure users can reconnect if they lose connection
+ - change over to use the game uuid as the socket's room id
+ - let game.js handle the sockets directly instead of passing messages back to index.js (same with users.js?)
+ - store socket in user object
+ - add functionality to user object to build a list of messages, and "flush" them to the user
+ - add function to take a string and change it to "you" pronouns instead of your name/color
+ - Maybe show your image on right side, like a messaging app
+ - prevent players from using colors as their username

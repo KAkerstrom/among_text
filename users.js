@@ -1,16 +1,42 @@
 const { error } = require('./util');
 const users = {};
 
+class User {
+  constructor(socket) {
+    this.socket = socket;
+    this.id = socket.id;
+    this.username = 'undefined';
+    this.state = 'await_init';
+    this.room = null;
+    this.color = null;
+    this.action = null;
+    this.queue = [];
+    this.vented = false;
+  }
+
+  setUsername(username) {
+    if (!username) return error('Username is required.');
+    if (username.length < 3)
+      return error('Username must be at least 3 characters long.');
+    if (username.length > 16)
+      return error('Username cannot be longer than 16 characters.');
+
+    this.username = username;
+    return { message: `Hello, ${username}.` };
+  }
+
+  addToQueue(message) {
+    this.queue.push(message);
+  }
+
+  flushQueue() {
+    this.socket.emit('msg', this.queue);
+    this.queue = [];
+  }
+}
+
 const newUser = (socket) => {
-  const user = {
-    socket,
-    id: socket.id,
-    username: '',
-    state: 'await_init',
-    room: null,
-    color: null,
-    action: null,
-  };
+  const user = new User(socket);
   users[socket.id] = user;
   return user;
 };
@@ -21,24 +47,8 @@ const removeUser = (socketId) => {
 
 const getUser = (socketId) => users[socketId] || null;
 
-const setUsername = (socketId, username) => {
-  if (!username) return { error: true, message: 'Username is required.' };
-  if (!users[socketId])
-    return error(
-      "User doesn't exist. Please reestablish connection with server."
-    );
-  if (username.length < 3)
-    return error('Username must be at least 3 characters long.');
-  if (username.length > 16)
-    return error('Username cannot be longer than 16 characters.');
-
-  users[socketId].username = username;
-  return { error: false, message: 'Hello, ' + username };
-};
-
 module.exports = {
   newUser,
   removeUser,
   getUser,
-  setUsername,
 };

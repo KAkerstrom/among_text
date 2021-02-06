@@ -18,3 +18,15 @@
 input {
   max-height: 2rem;
 }
+
+.chatName {
+  font-size: larger;
+  color: black;
+}
+
+@supports (-webkit-text-stroke: 1px black) {
+  .chatName {
+    -webkit-text-stroke: 1px black;
+    -webkit-text-fill-color: white;
+  }
+}

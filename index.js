@@ -3,7 +3,7 @@ const http = require('http');
 const express = require('express');
 const socketio = require('socket.io');
 const cors = require('cors');
-const { newUser, removeUser, getUser, setUsername } = require('./users');
+const { newUser, removeUser, getUser } = require('./users');
 const { joinGame, leaveGame, getGame, parse } = require('./game');
 
 const app = express();
@@ -27,7 +27,7 @@ io.on('connect', (socket) => {
   const user = newUser(socket);
 
   socket.on('init', ({ username, roomCode }) => {
-    let result = setUsername(socket.id, username);
+    let result = user.setUsername(username);
     if (result.error) {
       socket.emit('init_fail', [result]);
       return;
@@ -40,15 +40,15 @@ io.on('connect', (socket) => {
       }
     }
 
-    const user = getUser(socket.id);
     user.state = 'lobby';
     socket.join(roomCode);
     socket.emit('init_success', [result]);
-    socket
-      .to(roomCode)
-      .emit('msg', [
-        { message: `${username} has joined the room as ${user.color}` },
-      ]);
+    socket.to(roomCode).emit('msg', [
+      {
+        img: `profile/${user.color}.png`,
+        message: `${username} has joined the room as ${user.color}`,
+      },
+    ]);
   });
 
   socket.on('disconnect', () => {
@@ -65,8 +65,6 @@ io.on('connect', (socket) => {
   });
 
   socket.on('command', (data) => {
-    const user = getUser(socket.id);
-    if (!user) return [error('No user found. Try reconnecting.')];
     if (!user.room) return [error('User not in a game. Try reconnecting.')];
     const game = getGame(user.room);
     if (!game) return [error('User is not in a game. Try reconnecting.')];

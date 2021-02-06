@@ -28,6 +28,7 @@
     ></script>
 
     <script src="./node_modules/socket.io-client/dist/socket.io.js"></script>
+    <script defer src="./messages.js"></script>
     <script defer src="./scripts.js"></script>
   </head>
   <body
@@ -36,7 +37,10 @@
     <div class="contentDiv container rounded shadow bg-secondary w-50 h-75">
       <div id="game" class="w-100 h-100" style="display: none">
         <div class="gameDiv w-100 h-100">
-          <div id="messageDiv" class="messageDiv m-2 d-flex flex-column"></div>
+          <div
+            id="messageDiv"
+            class="messageDiv m-2 pt-4 d-flex flex-column"
+          ></div>
           <div class="commandDiv d-flex flex-row align-items-center mb-2">
             <input
               id="commandTxt"

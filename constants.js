@@ -1,26 +1,26 @@
 const colors = [
-  'Red',
-  'Blue',
-  'Green',
-  'Pink',
-  'Orange',
-  'Yellow',
-  'Black',
-  'White',
-  'Purple',
-  'Brown',
-  'Cyan',
-  'Lime',
+  'red',
+  'blue',
+  'green',
+  'pink',
+  'orange',
+  'yellow',
+  'black',
+  'white',
+  'purple',
+  'brown',
+  'cyan',
+  'lime',
 ];
 
 const map = {
   cafeteria: {
     aliases: ['cafeteria'],
-    exits: { e: 'medical', w: 'weapons', s: 'admin' },
+    exits: { w: 'medbay', e: 'weapons', s: 'admin' },
     vents: ['admin', 'oxygen'],
   },
-  medical: {
-    aliases: ['medical', 'medbay'],
+  medbay: {
+    aliases: ['medbay', 'medical'],
     exits: { w: 'upper', e: 'cafeteria' },
     vents: ['security', 'electrical'],
   },
@@ -31,12 +31,12 @@ const map = {
   },
   weapons: {
     aliases: ['weapons'],
-    exits: { e: 'cafeteria', s: 'oxygen' },
+    exits: { w: 'cafeteria', s: 'oxygen' },
     vents: ['navigation', 'shields'],
   },
   upper: {
     aliases: ['upper reactor', 'upper'],
-    exits: { w: 'medical', s: 'reactor' },
+    exits: { e: 'medbay', s: 'reactor' },
     vents: ['reactor'],
   },
   lower: {
@@ -52,7 +52,7 @@ const map = {
   security: {
     aliases: ['security', 'cams', 'cameras'],
     exits: { w: 'reactor' },
-    vents: ['medical', 'electrical'],
+    vents: ['medbay', 'electrical'],
   },
   oxygen: {
     aliases: ['oxygen', 'o2', 'oxy'],
@@ -80,7 +80,7 @@ const map = {
   electrical: {
     aliases: ['electrical'],
     exits: { w: 'lower', e: 'storage' },
-    vents: ['security', 'medical'],
+    vents: ['security', 'medbay'],
   },
 };
 
