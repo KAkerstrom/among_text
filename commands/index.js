@@ -1,0 +1,16 @@
+module.exports = {
+  helpCommand: require('./helpCommand'),
+  waitCommand: require('./waitCommand'),
+  lookCommand: require('./lookCommand'),
+  goCardinalCommand: require('./goCardinalCommand'),
+  goLocationCommand: require('./goLocationCommand'),
+  ventCommand: require('./ventCommand'),
+  sayCommand: require('./sayCommand'),
+  killCommand: require('./killCommand'),
+  reportCommand: require('./reportCommand'),
+  startCommand: require('./startCommand'),
+  voteCommand: require('./voteCommand'),
+  skipCommand: require('./skipCommand'),
+  taskCommand: require('./taskCommand'),
+  checkTasksCommand: require('./checkTasksCommand'),
+};

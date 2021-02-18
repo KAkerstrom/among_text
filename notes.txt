@@ -1,10 +1,49 @@
 Todo:
- - Change to use classes for users and games
  - use a client-stored uuid to ensure users can reconnect if they lose connection
- - change over to use the game uuid as the socket's room id
- - let game.js handle the sockets directly instead of passing messages back to index.js (same with users.js?)
- - store socket in user object
- - add functionality to user object to build a list of messages, and "flush" them to the user
- - add function to take a string and change it to "you" pronouns instead of your name/color
- - Maybe show your image on right side, like a messaging app
- - prevent players from using colors as their username
+
+
+Must-haves:
+  - Check at start if there are enough players
+
+  - Tasks
+    - Once all tasks are complete, the game ends - show Victory/Defeat
+
+  - Sabotage
+    - Lights
+      - Hides who is in the room, won't show bodies, won't show when imposter vents or kills
+      - Must be fixed in Electrical (by 1 player)
+    - Comms
+      - Players can't view task list
+      - Players can't talk
+      - Must be fixed in Comms
+    - Reactor
+      - Game will end in X turns (like 6?)
+      - Must be fixed in Reactor - 2 players must fix at the same time
+    - Oxygen
+      - Game will end in X turns
+      - Must be fixed in Oxygen AND Admin
+    - Doors
+      - "go" actions are interrupted this turn
+  
+
+  - Attach a uuid to the client, so they can attempt to reconnect if they lose connection
+
+
+Extra Stuff:
+  - Have a message buffer on client side, allow messages to have a delay before displaying
+  - Terminal mode - https://terminal.jcubic.pl/ (make main mode?)
+  - Security Cams
+  - Admin table
+  - Check for end of game when a player disconnects
+  - Multiple imposters
+  - Consider making "say" command necessary everywhere
+  - Allow changing your color in the lobby
+  - Add "costumes"
+  - Allow having multiple imposters
+  - Add game settings, like kill cooldown etc
+  - Let ghosts do things without needing to lock in
+  - Randomized kill messages
+  - fake tasks for imposters
+  - Show who has an action locked in
+ 
+  - Have a 'lobby' room in the map with no exits - simplify the lobby system, allows for lookCommand etc

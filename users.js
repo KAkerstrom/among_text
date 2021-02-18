@@ -1,4 +1,6 @@
 const { error } = require('./util');
+const { colors } = require('./constants');
+const { match } = require('assert');
 const users = {};
 
 class User {
@@ -9,9 +11,28 @@ class User {
     this.state = 'await_init';
     this.room = null;
     this.color = null;
-    this.action = null;
     this.queue = [];
+    this.imposter = false;
     this.vented = false;
+    this.dead = false;
+    this.killCooldown = 0;
+    this.samplesCooldown = 0;
+    this.place = 'cafeteria';
+  }
+
+  reset() {
+    this.imposter = false;
+    this.vented = false;
+    this.dead = false;
+    this.killCooldown = 0;
+    this.samplesCooldown = 0;
+    this.place = 'cafeteria';
+  }
+
+  get displayName() {
+    return `[[@;;;;./img/profile/${this.color}.png]][[b;${
+      this.color === 'black' ? 'grey' : this.color
+    };]${this.username}:]`;
   }
 
   setUsername(username) {
@@ -20,13 +41,18 @@ class User {
       return error('Username must be at least 3 characters long.');
     if (username.length > 16)
       return error('Username cannot be longer than 16 characters.');
+    if (!new RegExp('^[a-zA-Z0-9-_]+$').test(username))
+      return error('Username can only contain letters, -, or _. (no spaces)');
+    if (colors.indexOf(username.toLowerCase()) >= 0)
+      return error('Username cannot be a colour.');
 
     this.username = username;
     return { message: `Hello, ${username}.` };
   }
 
   addToQueue(message) {
-    this.queue.push(message);
+    if (Array.isArray(message)) this.queue = this.queue.concat(message);
+    else this.queue.push(message);
   }
 
   flushQueue() {

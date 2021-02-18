@@ -30,3 +30,17 @@ input {
     -webkit-text-fill-color: white;
   }
 }
+
+.contentDiv {
+  height: 90%;
+  width: 50%;
+}
+
+@media only screen and (orientation: portrait) {
+  .contentDiv {
+    height: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 10px;
+  }
+}

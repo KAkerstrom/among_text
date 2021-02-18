@@ -36,7 +36,7 @@ const chatDiv = ({ img, username, message, imgSize }) => {
   newChatDiv.childNodes[1].childNodes[0].innerText = username || '';
   newChatDiv.childNodes[1].childNodes[1].innerText = message || '';
   if (img) {
-    newChatDiv.childNodes[0].src = img ? './img/' + img : '';
+    newChatDiv.childNodes[0].src = img ? `img/${img}.png` : '';
     if (imgSize) {
       newChatDiv.childNodes[0].style.width = `${imgSize}px`;
       newChatDiv.childNodes[0].style.height = `${imgSize}px`;

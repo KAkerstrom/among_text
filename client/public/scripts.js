@@ -59,7 +59,7 @@ usernameTxt.addEventListener('keydown', (e) => {
 });
 
 roomCodeTxt.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') joinRoom();
+  if (e.key === 'Enter' && !joinBtn.disabled) joinRoom();
 });
 
 document.getElementById('sendBtn').addEventListener('click', sendCommand);
@@ -72,7 +72,8 @@ joinBtn.addEventListener('click', () => {
 
 socket.on('init_fail', (data) => {
   alert(
-    '(Proper error alerts to come)\nThere was an error joining the room. View console for details.'
+    `Error:
+    ${(data && data[0] && data[0].message) || '[unknown error]'}`
   );
   joinBtn.disabled = false;
   console.log(data);

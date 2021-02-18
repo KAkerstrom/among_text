@@ -9,6 +9,7 @@
   "author": "Kyle Akerstrom",
   "license": "ISC",
   "dependencies": {
+    "jquery.terminal": "^2.22.0",
     "socket.io-client": "^3.1.0"
   }
 }
