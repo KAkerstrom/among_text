@@ -2,6 +2,10 @@ const { tasks } = require('../constants');
 const { error } = require('../util');
 
 const startCommand = (game, player, parsed) => {
+  if (game.state !== 'lobby') {
+    player.addToQueue(error('The game has already been started.'));
+    return;
+  }
   if (game.host !== player.socket.id) {
     player.addToQueue(error('Only the host can start the game.'));
     return;
@@ -11,6 +15,7 @@ const startCommand = (game, player, parsed) => {
   const imp = game.players[Math.floor(Math.random() * game.players.length)];
   imp.imposter = true;
   imp.killCooldown = game.killCooldown;
+  imp.place = 'cafeteria';
   imp.addToQueue([
     { cls: true },
     {
@@ -28,6 +33,7 @@ Kill all crewmates without being discovered!`,
   const crew = game.players.filter((x) => !x.imposter);
   crew.forEach((x) => {
     x.imposter = false;
+    x.place = 'cafeteria';
     x.tasks = [
       ...commonTasks.sort(() => 0.5 - Math.random()).slice(0, game.commonTasks),
       ...longTasks.sort(() => 0.5 - Math.random()).slice(0, game.longTasks),

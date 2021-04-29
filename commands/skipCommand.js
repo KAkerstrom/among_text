@@ -1,4 +1,8 @@
 const skipCommand = (game, player, parsed) => {
+  if (game.state !== 'meeting') {
+    player.addToQueue(error('You can only vote during a meeting.'));
+    return;
+  }
   if (player.dead) {
     player.addToQueue({
       error: true,
@@ -19,9 +23,9 @@ const skipCommand = (game, player, parsed) => {
     .filter((x) => x.id !== player.id)
     .forEach((x) =>
       x.addToQueue({
-        img: `profile/${player.color}`,
+        //img: `profile/${player.color}`,
         imgSize: 32,
-        message: `${player.username} (${player.color}) has cast their vote.`,
+        message: `${player.name()} has cast their vote.`,
       })
     );
 

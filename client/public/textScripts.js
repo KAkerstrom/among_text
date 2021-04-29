@@ -1,12 +1,28 @@
-const socket = io('http://kakerstrom.com:3000');
+const socket = io('localhost:3000');
 let connecting = false;
 let connected = false;
 let username = null;
 let roomCode = null;
+
+const greetings = `
+　ﾟ    [[;white;]ඞ]            。                   　ﾟ          [[;blue;]ඞ]         。
+    ▄▄▄   •   ███▄ ▄███▓ ▒█████   ███▄    █   ▄████  •  █    ██   ██████ 　ﾟ
+   ▒████▄    ▓██▒▀█▀ ██▒▒██▒  ██▒ ██ ▀█   █  ██▒ ▀█▒    ██  ▓██▒▒██    ▒    。 
+•  ▒██  ▀█▄  ▓██    ▓██░▒██░  ██▒▓██  ▀█ ██▒▒██░▄▄▄░   ▓██ •▒██░░ ▓██▄   
+   ░██▄▄▄▄██ ▒██  • ▒██ ▒██   ██░▓██▒  ▐▌██▒░▓█  ██▓   ▓▓█  ░██░  ▒   ██▒  •
+    ▓█   ▓██▒▒██▒   ░██▒░ ████▓▒░▒██░   ▓██░░▒▓███▀▒   ▒▒█████▓ ▒██████▒▒
+ •  ▒▒   ▓▒█░░ ▒░   ░  ░░ ▒░▒░▒░ ░ ▒░   ▒ ▒  ░▒   ▒    ░▒▓▒ ▒ ▒ ▒ ▒▓▒ ▒ ░
+     ▒ [[;red;]ඞ]▒▒ ░░  ░      ░  ░ ▒ ▒░ ░ ░░   ░ ▒░  ░   ░    ░░▒░ ░ ░ ░ ░▒  ░ ░ 　ﾟ
+     ░   ▒• ░      ░   ░ ░ ░ ▒     ░ [[;yellow;]ඞ] ░ ░ ░ ░   ░  •  ░░░ ░ ░ ░  ░  ░   
+         ░  ░      ░       ░ ░  •        ░       ░       ░           ░  [[;pink;]ඞ]
+         　ﾟ             。                     。                　ﾟ         •
+         `;
+
 const term = $('#terminal').terminal(
   function (command) {
     if (!username) {
       username = command;
+      localStorage.setItem('username', username);
       term.set_prompt('room code: ');
     } else if (!roomCode) {
       term.set_prompt('logging in...');
@@ -16,23 +32,12 @@ const term = $('#terminal').terminal(
     } else if (!connecting && connected)
       socket.emit('command', { message: command });
   },
-  {
-    greetings: `
- 　ﾟ    [[;white;]ඞ]            。                   　ﾟ          [[;blue;]ඞ]         。
-     ▄▄▄   •   ███▄ ▄███▓ ▒█████   ███▄    █   ▄████  •  █    ██   ██████ 　ﾟ
-    ▒████▄    ▓██▒▀█▀ ██▒▒██▒  ██▒ ██ ▀█   █  ██▒ ▀█▒    ██  ▓██▒▒██    ▒    。 
- •  ▒██  ▀█▄  ▓██    ▓██░▒██░  ██▒▓██  ▀█ ██▒▒██░▄▄▄░   ▓██ •▒██░░ ▓██▄   
-    ░██▄▄▄▄██ ▒██  • ▒██ ▒██   ██░▓██▒  ▐▌██▒░▓█  ██▓   ▓▓█  ░██░  ▒   ██▒  •
-     ▓█   ▓██▒▒██▒   ░██▒░ ████▓▒░▒██░   ▓██░░▒▓███▀▒   ▒▒█████▓ ▒██████▒▒
-  •  ▒▒   ▓▒█░░ ▒░   ░  ░░ ▒░▒░▒░ ░ ▒░   ▒ ▒  ░▒   ▒    ░▒▓▒ ▒ ▒ ▒ ▒▓▒ ▒ ░
-      ▒ [[;red;]ඞ]▒▒ ░░  ░      ░  ░ ▒ ▒░ ░ ░░   ░ ▒░  ░   ░    ░░▒░ ░ ░ ░ ░▒  ░ ░ 　ﾟ
-      ░   ▒• ░      ░   ░ ░ ░ ▒     ░ [[;yellow;]ඞ] ░ ░ ░ ░   ░  •  ░░░ ░ ░ ░  ░  ░   
-          ░  ░      ░       ░ ░  •        ░       ░       ░           ░  [[;pink;]ඞ]
-          　ﾟ             。                     。                　ﾟ         •
-          `,
-  }
+  { greetings }
 );
+
 term.set_prompt('username: ');
+const cached_username = localStorage.getItem('username');
+if (cached_username) term.set_command(cached_username);
 
 // // term.read('username: ').then((res) => (username = res));
 // // term.read('room code: ').then((res) => (roomCode = res));
@@ -91,16 +96,7 @@ socket.on('msg', (data) => {
   data.forEach((x) => {
     if (x.cls) term.clear();
     if (x.img) x.message = `[[@;;;;./img/${x.img}.png]] ${x.message || ''}`;
-    term.echo(x.message || '', {
-      finalize: function (div) {
-        if (div.find('img'))
-          div
-            .find('img')
-            .css('float', 'left')
-            .css('width', '1em')
-            .css('height', '1em');
-      },
-    });
+    term.echo(x.message || '');
   });
   term.echo('');
 });
@@ -108,8 +104,11 @@ socket.on('msg', (data) => {
 socket.on('disconnect', (data) => {
   connecting = connected = false;
   term.clear();
+  term.echo(greetings);
   term.echo('Server disconnect...');
   term.echo('');
   username = roomCode = null;
   term.set_prompt('username: ');
+  const cached_username = localStorage.getItem('username');
+  if (cached_username) term.set_command(cached_username);
 });

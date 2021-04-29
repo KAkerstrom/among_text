@@ -14,5 +14,8 @@ body {
   box-sizing: border-box; /* Opera/IE 8+ */
 }
 
-#terminal {
+img {
+  display: inline-block !important;
+  width: 1rem;
+  height: 1rem;
 }

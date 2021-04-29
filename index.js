@@ -33,21 +33,18 @@ io.on('connect', (socket) => {
       socket.emit('init_fail', [result]);
       return;
     }
-    if (roomCode) {
-      result = joinGame(socket, roomCode);
-      if (result.error) {
-        socket.emit('init_fail', [result]);
-        return;
-      }
+    result = joinGame(socket, roomCode);
+    if (result.error) {
+      socket.emit('init_fail', [result]);
+      return;
     }
 
     user.state = 'lobby';
-    socket.join(roomCode);
     socket.emit('init_success', [result]);
     socket.to(roomCode).emit('msg', [
       {
-        img: `profile/${user.color}`,
-        message: `${username} has joined the room as ${user.color}`,
+        //img: `profile/${user.color}`,
+        message: `${user.name()} has joined the room as ${user.color}.`,
       },
     ]);
   });

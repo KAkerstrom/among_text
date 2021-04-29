@@ -14,6 +14,11 @@ const colors = [
 ];
 
 const map = {
+  lobby: {
+    aliases: ['lobby'],
+    exits: {},
+    vents: {},
+  },
   cafeteria: {
     aliases: ['cafeteria'],
     exits: { w: 'medbay', e: 'weapons', s: 'admin' },

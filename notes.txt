@@ -4,6 +4,7 @@ Todo:
 
 Must-haves:
   - Check at start if there are enough players
+  - Emergency button
 
   - Tasks
     - Once all tasks are complete, the game ends - show Victory/Defeat
@@ -31,13 +32,10 @@ Must-haves:
 
 Extra Stuff:
   - Have a message buffer on client side, allow messages to have a delay before displaying
-  - Terminal mode - https://terminal.jcubic.pl/ (make main mode?)
-  - Security Cams
+  - Security Cams (how???)
   - Admin table
   - Check for end of game when a player disconnects
   - Multiple imposters
-  - Consider making "say" command necessary everywhere
-  - Allow changing your color in the lobby
   - Add "costumes"
   - Allow having multiple imposters
   - Add game settings, like kill cooldown etc
@@ -45,5 +43,7 @@ Extra Stuff:
   - Randomized kill messages
   - fake tasks for imposters
   - Show who has an action locked in
+  - Autocomplete actions & syntax highlight as you type to show if the action is free or not
+  - Fix disconnect issue where the player is not removed from the game
  
-  - Have a 'lobby' room in the map with no exits - simplify the lobby system, allows for lookCommand etc
+  - Have a 'lobby' room in the map with no exits - simplify/streamline the lobby system, allows for lookCommand etc

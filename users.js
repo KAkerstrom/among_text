@@ -17,7 +17,8 @@ class User {
     this.dead = false;
     this.killCooldown = 0;
     this.samplesCooldown = 0;
-    this.place = 'cafeteria';
+    this.place = 'lobby';
+    this.meetings = 1;
   }
 
   reset() {
@@ -26,13 +27,14 @@ class User {
     this.dead = false;
     this.killCooldown = 0;
     this.samplesCooldown = 0;
-    this.place = 'cafeteria';
+    this.place = 'lobby';
+    this.meetings = 1;
   }
 
-  get displayName() {
-    return `[[@;;;;./img/profile/${this.color}.png]][[b;${
+  name(type) {
+    return `[[@;;;;./img/${type || 'profile'}/${this.color}.png]][[b;${
       this.color === 'black' ? 'grey' : this.color
-    };]${this.username}:]`;
+    };]${this.username}]`;
   }
 
   setUsername(username) {

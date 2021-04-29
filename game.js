@@ -1,25 +1,10 @@
 const games = {};
 const { v4: uuidv4 } = require('uuid');
-const { mainParser, lobbyParser, meetingParser } = require('./parsers');
+const mainParser = require('./parser');
 const { getUser } = require('./users');
 const { error } = require('./util');
 const { colors, map } = require('./constants');
-const {
-  helpCommand,
-  waitCommand,
-  lookCommand,
-  goCardinalCommand,
-  goLocationCommand,
-  ventCommand,
-  sayCommand,
-  killCommand,
-  reportCommand,
-  voteCommand,
-  startCommand,
-  skipCommand,
-  taskCommand,
-} = require('./commands');
-const checkTasksCommand = require('./commands/checkTasksCommand');
+const commands = require('./commands');
 
 class Game {
   constructor(host, roomCode) {
@@ -27,18 +12,25 @@ class Game {
     this.code = roomCode;
     this.host = host.id;
     this.players = [host];
-    this.state = 'lobby';
-    this.actions = [];
-    this.bodies = [];
-    this.votes = [];
+    this.resetForLobby();
 
     this.killCooldown = 4;
     this.longTasks = 1;
     this.shortTasks = 3;
     this.commonTasks = 1;
 
-    host.color = colors[0];
-    host.place = 'cafeteria';
+    host.color = colors[Math.floor(Math.random() * colors.length)];
+    host.place = 'lobby';
+  }
+
+  resetForLobby() {
+    this.players.forEach((x) => x.reset());
+    this.actions = [];
+    this.bodies = [];
+    this.votes = [];
+    this.state = 'lobby';
+    this.activeSabotage = null;
+    this.sabotageCooldown = 0;
   }
 
   getAvailableColors() {
@@ -54,14 +46,28 @@ class Game {
       return error('A user in the room already has that name.');
     const availableColors = this.getAvailableColors();
     if (availableColors.length === 0) return error('Room is full.');
-    player.color = availableColors[0];
+
+    player.color =
+      availableColors[Math.floor(Math.random() * availableColors.length)];
     player.place = 'cafeteria';
+    player.addToQueue();
+
+    this.players.forEach((x) => {
+      x.addToQueue({ message: `${player.name()} has joined the lobby!` });
+      x.flushQueue();
+    });
     this.players.push(player);
+
     return {
-      img: `profile/${player.color}`,
-      message: `Joined room lobby ${this.code} as ${player.color}.
-Text entered here will be sent as a chat message to the room.
-(this will be fixed in a future version)`,
+      cls: true,
+      message: `Joined room lobby "${this.code}" as ${player.name()}.
+
+Commands:
+  say <something> ....... Say something to the lobby
+
+Players:\n${this.players
+        .filter((x) => x.id !== player.id)
+        .map((x) => '  ' + x.name())}`,
     };
   }
 
@@ -113,16 +119,14 @@ Text entered here will be sent as a chat message to the room.
           case 'go':
             // Announce leaving the room
             message = {
-              img: `profile/${player.color}`,
-              message: `${player.username} (${player.color}) has gone to ${action.to}.`,
+              message: `${player.name()} has gone to ${action.to}.`,
             };
             this.players
               .filter((x) => player.place === x.place && player.id !== x.id)
               .forEach((x) => x.addToQueue(message));
             player.place = action.to;
             message = {
-              img: `profile/${player.color}`,
-              message: `${player.username} (${player.color}) has entered the room.`,
+              message: `${player.name()} has entered the room.`,
             };
             this.players
               .filter((x) => player.place === x.place && player.id !== x.id)
@@ -133,8 +137,9 @@ Text entered here will be sent as a chat message to the room.
 
           case 'vent':
             message = {
-              img: `imposter/${player.color}`,
-              message: `${player.username} (${player.color}) has just jumped into a vent!`,
+              message: `${player.name(
+                'imposter'
+              )} has just jumped into a vent!`,
             };
             this.players
               .filter((x) => player.place === x.place && player.id !== x.id)
@@ -158,24 +163,27 @@ Text entered here will be sent as a chat message to the room.
 
             // Imposter message
             message = {
-              img: `imposter/${player.color}`,
-              message: `You kill ${action.victim.username} in cold blood!
+              message: `You kill ${action.victim.name('dead')} in cold blood!
 You cannot kill again for ${this.killCooldown} turns.`,
             };
             player.addToQueue(message);
 
             // Victim message
             message = {
-              img: `imposter/${player.color}`,
               imgSize: 80,
-              message: `${player.username} has murdered you in cold blood!`,
+              message: `${player.name(
+                'imposter'
+              )} has murdered you in cold blood!`,
             };
             action.victim.addToQueue(message);
 
             // Witness message
             message = {
-              img: `imposter/${player.color}`,
-              message: `${player.username} has murdered ${action.victim.username} right in front of you!`,
+              message: `${player.name(
+                'imposter'
+              )} has murdered ${action.victim.name(
+                'dead'
+              )} right in front of you!`,
             };
             this.players
               .filter(
@@ -206,7 +214,7 @@ You cannot kill again for ${this.killCooldown} turns.`,
           !x.vented &&
           (!x.dead || player.dead)
       )
-      .map((x) => `${x.username} (${x.color})\n`);
+      .map((x) => `${x.name()}\n`);
     let message;
     message = player.vented
       ? `You are hiding inside the vent in ${player.place}.\n`
@@ -222,10 +230,25 @@ ${map[player.place].vents.join('\n')}`;
       message += '\nExits:\n';
       ['north', 'east', 'west', 'south'].forEach((x) => {
         let exit = exits[x[0]];
-        if (exit) message += `${x} - ${exit}\n`;
+        if (exit) message += `  ${x} - ${exit}\n`;
       });
     }
-    let output = [{ img: `rooms/${player.place}`, imgSize: 128, message }];
+    // Should replace this with a more flexible room description
+    if (player.place === 'cafeteria')
+      message +=
+        '\nThe Emergency Button is here. You can [[b;green;]press] the button to call a meeting.';
+
+    if (!player.imposter && player.tasks) {
+      const tasks_here = player.tasks.filter((x) => x.place === player.place);
+      if (tasks_here.length > 0) {
+        message += '\n\nYou have tasks in this room:';
+        tasks_here.forEach((x) => {
+          message += `\n${x.description}`;
+        });
+      }
+    }
+
+    let output = [{ message }];
 
     const bodies = this.bodies.filter((x) => x.place === player.place);
     bodies.forEach((x) => {
@@ -238,7 +261,7 @@ ${map[player.place].vents.join('\n')}`;
       else
         output.push({
           img: `dead/${x.color}`,
-          message: `Oh no! A dead body!\nIt's ${x.username} (${x.color})!`,
+          message: `Oh no! A dead body!\nIt's ${x.name('dead')}!`,
         });
     });
     if (player.imposter && player.killCooldown > 0) {
@@ -258,36 +281,20 @@ ${map[player.place].vents.join('\n')}`;
     if (command.length === 0) return;
     const player = this.players.find((x) => x.socket.id === socket.id);
     if (!player) return error('User not found. Try reconnecting.');
-    command = command.toLowerCase();
-    const commands = {
-      help: helpCommand,
-      wait: waitCommand,
-      look: lookCommand,
-      go_cardinal: goCardinalCommand,
-      go_location: goLocationCommand,
-      vent: ventCommand,
-      say: sayCommand,
-      kill: killCommand,
-      report: reportCommand,
-      start: startCommand,
-      vote: voteCommand,
-      skip: skipCommand,
-      task: taskCommand,
-      check_tasks: checkTasksCommand,
-    };
-    const parsers = {
-      main: mainParser,
-      lobby: lobbyParser,
-      meeting: meetingParser,
-    };
+    command = command.replace('\n', '');
     // try {
-    let parsed = parsers[this.state].parse(command, {
+    let parsed = mainParser.parse(command.toLowerCase(), {
       usernames: this.players.map((x) => x.username.toLowerCase()),
       usercolors: this.players.map((x) => x.color.toLowerCase()),
+      colors,
     });
+
     console.log('parsed: ', parsed);
-    if (parsed.error) player.addToQueue(error(parsed.message));
-    else commands[parsed.type](this, player, parsed);
+    if (parsed.error) {
+      player.addToQueue(error(parsed.message));
+    } else if (Object.keys(commands).indexOf(this.state) === -1) {
+      player.addToQueue(error("You can't do that here."));
+    } else commands[this.state][parsed.type](this, player, parsed, command);
     // } catch (ex) {
     //   console.error(`PARSING ERROR:\n${command}\n${ex}`);
     //   player.addToQueue(error('Parsing error...'));
@@ -305,9 +312,9 @@ ${map[player.place].vents.join('\n')}`;
     message += '\nAny locked-in actions have been cancelled.\n\n';
     this.players.forEach(
       (x) =>
-        (message += `${x.username} (${x.color})${x.dead ? ' - DEAD' : ''}${
-          x.id === player.id ? ' - MEETING HOST' : ''
-        }\n`)
+        (message += `${x.name(x.dead ? 'dead' : 'profile')}${
+          x.dead ? ' - DEAD' : ''
+        }${x.id === player.id ? ' - MEETING HOST' : ''}\n`)
     );
     this.players.forEach((x) => {
       x.vented = false;
@@ -341,9 +348,7 @@ ${map[player.place].vents.join('\n')}`;
       const votesForPlayer = voteCount[x.id];
       if (votesForPlayer) {
         let msg = {
-          img: `profile/${x.color}`,
-          imgSize: 32,
-          message: `${x.username} (${x.color}): ${votesForPlayer} votes\n`,
+          message: `${x.name()}: ${votesForPlayer} votes\n`,
         };
         this.players.forEach((y) => y.addToQueue(msg));
       }
@@ -363,7 +368,7 @@ ${map[player.place].vents.join('\n')}`;
       votedPlayer.dead = true;
       this.players.forEach((x) => {
         x.addToQueue({
-          message: `${votedPlayer.username} (${votedPlayer.color}) has been voted out... the airlock.`,
+          message: `${votedPlayer.name()} has been voted out... the airlock.`,
         });
       });
     }
@@ -394,7 +399,7 @@ ${map[player.place].vents.join('\n')}`;
       crewMsg = {
         img: `dead/${imposter.color}`,
         imgSize: 64,
-        message: `VICTORY!\n\n${imposter.username} (${imposter.color}) was the imposter.`,
+        message: `VICTORY!\n\n${imposter.name('imposter')} was the imposter.`,
       };
       imposterMsg = {
         img: `dead/${imposter.color}`,
@@ -405,7 +410,7 @@ ${map[player.place].vents.join('\n')}`;
       crewMsg = {
         img: `imposter/${imposter.color}`,
         imgSize: 64,
-        message: `DEFEAT.\n\n${imposter.username} (${imposter.color}) was the imposter.`,
+        message: `DEFEAT.\n\n${imposter.name('imposter')} was the imposter.`,
       };
       imposterMsg = {
         img: `imposter/${imposter.color}`,
@@ -419,17 +424,9 @@ ${map[player.place].vents.join('\n')}`;
       .forEach((x) => x.addToQueue(crewMsg));
     imposter.addToQueue(imposterMsg);
     this.players.forEach((x) =>
-      x.addToQueue({ message: 'You are in the game lobby.' })
+      x.addToQueue({ message: '\nYou are in the game lobby.' })
     );
     this.resetForLobby();
-  }
-
-  resetForLobby() {
-    this.players.forEach((x) => x.reset());
-    this.actions = [];
-    this.bodies = [];
-    this.votes = [];
-    this.state = 'lobby';
   }
 }
 
@@ -450,11 +447,13 @@ const joinGame = (socket, roomCode) => {
     game = new Game(user, roomCode);
     games[roomCode] = game;
     return {
-      img: `profile/${user.color}`,
-      message: `Created new lobby ${roomCode} as ${user.color}.
-Text entered here will be sent as a chat message to the room.
-(this will be fixed in a future version)
-\nType /start to start the game.`,
+      //img: `profile/${user.color}`,
+      cls: true,
+      message: `Created new lobby "${roomCode}" as ${user.name()}.
+      
+Commands:
+  say <something> ....... Say something to the lobby
+  start game ............ Start the game!`,
     };
   }
 };

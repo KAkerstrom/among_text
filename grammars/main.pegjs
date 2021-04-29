@@ -11,51 +11,74 @@ start
   / reportCommand
   / taskCommand
   / checkTasksCommand
+  / startCommand
+  / voteCommand
+  / skipCommand
+  / changeColorCommand
+  / pressButtonCommand
   / fail
 
 helpCommand
-  = ('help' / '?') !.+ { return { type: 'help' } }
+  = ('help' / '?') end { return { type: 'help' } }
 
 ventCommand
   = 'vent' _ ('in'? 'to' _)? value:word (_ word)* { return { type: 'go_location', value } }
-  / ('go' / 'jump') _ (('in'? 'to'?)/'out of' _)? ('the'/'a' _)? 'vent' !.+ { return { type: 'vent' } } //todo: separate jumping into or out of the vent
+  / ('go' / 'jump') _ (('in'? 'to'?)/'out of' _)? ('the'/'a' _)? 'vent' end { return { type: 'vent' } } //todo: separate jumping into or out of the vent
   / 'vent' _ value:.+ { return {type: 'go_location', value} }
   / 'vent' .+ { return { error: true, message: 'Unrecognized command.' } }
-  / 'vent' { return { type: 'vent' } }
+  / 'vent' end { return { type: 'vent' } }
 
 goCommand
   = 'go' _ ('to' _)? ('the' _)? value:cardinal { return { type: 'go_cardinal', value } }
   / 'go' _ ('to' _)? ('the' _)? value:word (_ word)* { return { type: 'go_location', value } }
   / 'go' _ fail { return { error: true, type: 'go', message: 'Go where?' } }
   / 'go' !. { return { error: true, type: 'go', message: 'Go where?' } }
-  / 'go' _ .* { return { error: true, message: 'Unrecognized command.' } }
+  / 'go' _ .* { return { error: true, message: 'Unrecognized location.' } }
   / value:cardinal { return { type: 'go_cardinal', value } }
 
 waitCommand
-  = 'wait' !.+ { return { type: 'wait' } }
+  = 'wait' end { return { type: 'wait' } }
 
 lookCommand
-  = 'look' _? .* { return { type: 'look', at: null }; }
+  = 'look' end { return { type: 'look', at: null }; }
 
 sayCommand
   = 'say' _ value:.* { return { type: 'say', value: value.join('') } }
 
 killCommand
-  = 'kill' _ value:user !. { return { type:'kill', value } }
-  / 'kill' (_ word)+ !. { return { error: true, message: 'You must specify a player (or colour) to kill.' } }
-  / 'kill' _? !. { return { error: true, type: 'kill', message: 'Kill whom?' } }
+  = 'kill' _ value:user end { return { type:'kill', value } }
+  / 'kill' (_ word)+ end { return { error: true, message: 'You must specify a player (or colour) to kill.' } }
+  / 'kill' end { return { error: true, type: 'kill', message: 'Kill whom?' } }
 
 reportCommand
-  = 'report' (_ .*)? !.+ { return { type: 'report' } }
+  = 'report' (_ .*)? end { return { type: 'report' } }
 
 sabotageCommand
   = 'sabotage' _ ('the' _)? value:word { return { type: 'sabotage', value } }
 
 taskCommand
-  = task:task _? !. { return task }
+  = task:task end { return task }
 
 checkTasksCommand
-  = ('check' _)? ('tasks'/('task' _ 'list')) _? !. { return { type: 'check_tasks' } }
+  = ('check' _)? ('tasks'/('task' _ 'list')) end { return { type: 'check_tasks' } }
+
+startCommand
+  = 'start'_ 'game' end { return { type:'start' } }
+
+voteCommand
+  = 'vote' (_ 'for')? _ value:user { return { type:'vote', value } }
+  / 'vote' (_ 'for')? (_ word)+ { return { error: true, message: 'Unrecognized name.' } }
+  / 'vote' end { return { error: true, message: 'Vote for whom?' } }
+
+skipCommand
+  = 'skip' ((_ 'the')? _ 'vote')? end { return { type:'skip' } }
+
+changeColorCommand
+  = ('change' _)? 'colo' [u]? 'r' (_ 'to')? _ value:color end { return { type: 'change_color', value } }
+  / ('change' _)? 'colo' [u]? 'r' (_ 'to')? (_ word)+ end { return { error: true, message: 'Invalid colour.' } }
+
+pressButtonCommand
+  = ('press'/'push'/('smash' _ 'that')) (_ 'the')? (_ 'emergency')? _ 'button' end { return { type: 'press_button' } }
 
 
 
@@ -71,15 +94,23 @@ cardinal
   / dir:('n' / 'e' / 'w' / 's') ![a-zA-Z0-9] { return dir }
 
 user
-  = x:$word &{ return options.usernames.indexOf(x.toLowerCase()) >= 0 } { return x }
-  / x:$word &{ return options.usercolors.indexOf(x.toLowerCase()) >= 0 } { return options.usernames[options.usercolors.indexOf(x.toLowerCase())] }
+  = x:$word &{ return options.usernames.indexOf(x) >= 0 } { return x }
+  / x:$word &{ return options.usercolors.indexOf(x) >= 0 } { return options.usernames[options.usercolors.indexOf(x)] }
 
 fail
   = string:.+ { return { error: true, type: 'unknown', message: 'Unrecognized command: ' + string.join('') }; }
 
+end
+  = _? !.
 
 
 
+color
+  = x:$word &{ return options.colors.indexOf(x) >= 0 } { return x }
+  / 'lime' _ 'green' { return 'lime' }
+  / ('navy' / 'dark') _ 'blue' { return 'blue' }
+  / 'gr' [ae] 'y' { return 'black' }
+  / 'light' _ 'blue' { return 'cyan' }
 
 task
   = 'align' _ ('the' _)? 'engine' 's'? _ 'output'? { return { type: 'task', id: 'align_engine' } }

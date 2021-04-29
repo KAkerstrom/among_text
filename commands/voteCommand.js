@@ -1,6 +1,10 @@
 const { error } = require('../util');
 
 const voteCommand = (game, player, parsed) => {
+  if (game.state !== 'meeting') {
+    player.addToQueue(error('You can only vote during a meeting.'));
+    return;
+  }
   if (player.dead) {
     player.addToQueue(error('Dead players are not able to vote.'));
     return;
@@ -20,9 +24,7 @@ const voteCommand = (game, player, parsed) => {
   }
   if (vote.dead) {
     player.addToQueue(
-      error(
-        `${vote.username} (${vote.color}) is dead, and thus exempt from voting.`
-      )
+      error(`${vote.name('dead')} is dead, and thus exempt from voting.`)
     );
     return;
   }
@@ -31,15 +33,15 @@ const voteCommand = (game, player, parsed) => {
   player.addToQueue({
     img: `profile/${player.color}`,
     imgSize: 32,
-    message: `You have cast a vote for ${vote.username} (${vote.color}).`,
+    message: `You have cast a vote for ${vote.name()}.`,
   });
   game.players
     .filter((x) => x.id !== player.id)
     .forEach((x) =>
       x.addToQueue({
-        img: `profile/${player.color}`,
+        //img: `profile/${player.color}`,
         imgSize: 32,
-        message: `${player.username} (${player.color}) has cast their vote.`,
+        message: `${player.name()} has cast their vote.`,
       })
     );
   if (game.votes.length === game.players.filter((x) => !x.dead).length)

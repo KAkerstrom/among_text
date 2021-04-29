@@ -11,7 +11,7 @@ const ventCommand = (game, player, parsed) => {
       .forEach((x) =>
         x.addToQueue({
           img: `imposter/${player.color}`,
-          message: `${player.username} (${player.color}) jumps out of the vent!`,
+          message: `${player.name('imposter')} jumps out of the vent!`,
         })
       );
     player.addToQueue({
